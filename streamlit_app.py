@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 import torch
 import torch.nn as nn
-from torchvision import models, transforms
+from torchvision import models
 from PIL import Image
 
 # ---------------- FROZEN SETTINGS ----------------
