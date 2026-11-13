@@ -100,7 +100,7 @@ def predict(model, image):
     return ("Pneumonia" if prob >= THRESHOLD else "Normal"), prob
 
 
-def true_label_from_name(name):
+def True_label_from_name(name):
     n = name.lower()
     if "pneu" in n:
         return "Pneumonia"
@@ -122,7 +122,7 @@ with tab_predict:
     if load_err:
         st.error(load_err)
         st.stop()
-    image, true_label = None, None
+    image, True_label = None, None
 
     source = st.radio("Choose an input", ["Sample image", "Upload your own"], horizontal=True)
     if source == "Upload your own":
@@ -135,7 +135,7 @@ with tab_predict:
             choice = st.selectbox("Pick a sample test image", files)
             if choice:
                 image = Image.open(os.path.join(SAMPLES_DIR, choice)).convert("L")
-                true_label = true_label_from_name(choice)
+                True_label = True_label_from_name(choice)
         else:
             st.info(f"Add test images to the '{SAMPLES_DIR}' folder.")
 
@@ -148,9 +148,9 @@ with tab_predict:
             st.metric("Prediction", label)
             st.metric("P(pneumonia)", f"{prob:.1%}")
             st.caption(f"Decision threshold: {THRESHOLD}")
-            if true_label:
-                ok = "✅ correct" if true_label == label else "❌ incorrect"
-                st.write(f"True label: **{true_label}** ({ok})")
+            if True_label:
+                ok = "✅ correct" if True_label == label else "❌ incorrect"
+                st.write(f"True label: **{True_label}** ({ok})")
 
         st.info(
             "Context: on the held-out test set this model caught almost all pneumonia cases "
