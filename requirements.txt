@@ -4,3 +4,5 @@ torch
 torchvision
 pandas
 pillow
+torch
+streamlit
