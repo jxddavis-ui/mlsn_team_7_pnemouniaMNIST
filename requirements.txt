@@ -1,0 +1,2 @@
+cd path/to/your/mlsn_team_7_pnemouniaMNIST
+pip freeze > requirements.txt
