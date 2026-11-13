@@ -1,8 +1,6 @@
-cd path/to/your/mlsn_team_7_pnemouniaMNIST
+
 streamlit
 torch
 torchvision
 pandas
 pillow
-torch
-streamlit
