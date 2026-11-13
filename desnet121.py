@@ -113,6 +113,7 @@ for i, (name, (ys, ps, ep)) in enumerate(preds.items(), start=1):
 plt.tight_layout(); plt.show()
 
 # %% Cell 8: threshold table per config (shows what weights really change)
+torch.save(model.state_dict(), "best_model.pt")
 for name, (ys, ps, ep) in preds.items():
     print(f"\n{name}")
     for thr in np.arange(0.1, 0.91, 0.1):
