@@ -1,1 +1,0 @@
-# mlsn_team_7_pnemouniaMNIST# mlsn_team_7_pnemouniaMNIST
