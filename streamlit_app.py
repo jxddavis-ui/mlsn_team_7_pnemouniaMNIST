@@ -23,8 +23,8 @@ SEED = 42
 EPOCHS = 15
 CLASS_WEIGHTS = "None (unweighted)"
 TRAIN_AUGMENTATION = "TODO: e.g. random flip, small rotation"   # fill in from the training notebook
-THRESHOLD = 0.5                          # TODO: confirm the frozen threshold used for the test run
-MEAN, STD = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]   # TODO: must match training normalization
+THRESHOLD = 0.85                          # TODO: confirm the frozen threshold used for the test run
+MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]   # TODO: must match training normalization
 SAMPLES_DIR = "Sample Images"
 # -------------------------------------------------
 
