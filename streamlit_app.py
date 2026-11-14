@@ -25,7 +25,7 @@ CLASS_WEIGHTS = "None (unweighted)"
 TRAIN_AUGMENTATION = "TODO: e.g. random flip, small rotation"   # fill in from the training notebook
 THRESHOLD = 0.5                          # TODO: confirm the frozen threshold used for the test run
 MEAN, STD = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]   # TODO: must match training normalization
-SAMPLES_DIR = "samples"
+SAMPLES_DIR = "Sample Images"
 # -------------------------------------------------
 
 # ---------------- RESULTS (from the single test run) ----------------
