@@ -78,7 +78,7 @@ def load_model():
             for k in ("model_state_dict", "state_dict"):
                 if k in state:
                     state = state[k]
-state = {k.replace("module.", ""): (v.float() if v.is_floating_point() else v) for k, v in state.items()}
+        state = {k.replace("module.", ""): (v.float() if v.is_floating_point() else v) for k, v in state.items()}
         model.load_state_dict(state)
         model.eval()
         return model, None
