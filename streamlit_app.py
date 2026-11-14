@@ -96,7 +96,7 @@ preprocess = transforms.Compose([
 def predict(model, image):
     x = preprocess(image).unsqueeze(0)
     with torch.no_grad():
-        prob = torch.sigmoid(model(x)).item()   # P(pneumonia)
+       prob = torch.softmax(output, dim=1)[:, 1]   # P(pneumonia)
     return ("Pneumonia" if prob >= THRESHOLD else "Normal"), prob
 
 
