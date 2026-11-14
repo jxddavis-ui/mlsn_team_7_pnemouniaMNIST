@@ -70,6 +70,8 @@ def train(weights):
         ys, ps = predict(model); auc = roc_auc_score(ys, ps)
         print(f"   epoch {ep:02d}  val AUC {auc:.4f}")
         if auc > best_auc: best_auc, best = auc, (ys, ps, ep)
+        torch.save(model.state_dict(), "best_model.pt")
+    
     return best
 
 # %% Cell 5: run every config
