@@ -50,7 +50,7 @@ DISCLAIMER = (
 def build_model():
     """Must match the training architecture exactly."""
     model = models.densenet121(weights=None)
-    model.classifier = nn.Linear(model.classifier.in_features, 1)  # 1 logit
+    model.classifier = nn.Linear(model.classifier.in_features, 2)  # 1 logit
     return model
 
 
