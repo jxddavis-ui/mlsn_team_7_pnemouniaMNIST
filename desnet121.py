@@ -26,22 +26,37 @@ SEED, IMAGE_SIZE, BATCH_SIZE, EPOCHS, LR = 7, 64, 32, 10, 1e-4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # %% Cell 3: data, and CALCULATE the weights from the training counts
+# %% Cell 3: data, augmentation, and class weights
 info = medmnist.INFO["pneumoniamnist"]
 DataClass = getattr(medmnist, info["python_class"])
-tf = transforms.Compose([transforms.ToTensor(),
-                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
-train_ds = DataClass(split="train", transform=tf, download=True, size=IMAGE_SIZE, as_rgb=True)
-val_ds   = DataClass(split="val",   transform=tf, download=True, size=IMAGE_SIZE, as_rgb=True)
+
+train_tf = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(10),
+    transforms.ColorJitter(brightness=0.1, contrast=0.1),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])
+
+val_tf = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])
+
+train_ds = DataClass(split="train", transform=train_tf, download=True, size=IMAGE_SIZE, as_rgb=True)
+val_ds   = DataClass(split="val",   transform=val_tf,   download=True, size=IMAGE_SIZE, as_rgb=True)
 val_loader = DataLoader(val_ds, BATCH_SIZE, shuffle=False, num_workers=2)
 
 counts = np.bincount(train_ds.labels.flatten())          # [normal, pneumonia]
 inv = counts.sum() / (2 * counts)                        # inverse-frequency formula
 print("Counts [normal, pneumonia]:", counts)
 print("Inverse-frequency weights:", inv.round(2))
-print("Total influence per class (count x weight):", (counts * inv).round(0))
 
-CONFIGS = {"No weights": [1.0, 1.0],
-           "Inverse frequency": list(inv)}              # add more, e.g. "Sqrt": list(np.sqrt(inv))
+# Only train with balanced weights (or compare Sqrt vs Inverse frequency)
+CONFIGS = {
+    "Sqrt weights": list(np.sqrt(inv)),
+    "Inverse frequency": list(inv),
+}      # add more, e.g. "Sqrt": list(np.sqrt(inv))
 
 # %% Cell 4: train one config, return validation probabilities from the best epoch (by AUC)
 @torch.no_grad()
@@ -52,33 +67,39 @@ def predict(model):
         ys.extend(y.view(-1).numpy())
     return np.array(ys), np.array(ps)
 
-def train(weights):
+def train(weights, save_path="best_model.pt"):
     random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED); torch.cuda.manual_seed_all(SEED)
     torch.backends.cudnn.deterministic = True; torch.backends.cudnn.benchmark = False
     g = torch.Generator(); g.manual_seed(SEED)
     loader = DataLoader(train_ds, BATCH_SIZE, shuffle=True, generator=g, num_workers=2)
+
     model = densenet121(weights=DenseNet121_Weights.DEFAULT)
     model.classifier = nn.Linear(model.classifier.in_features, 2)
     model = model.to(device)
+
     crit = nn.CrossEntropyLoss(weight=torch.tensor(weights, dtype=torch.float32).to(device))
     opt = optim.Adam(model.parameters(), lr=LR)
     best_auc, best = -1, None
+
     for ep in range(1, EPOCHS + 1):
         model.train()
         for x, y in loader:
-            opt.zero_grad(); crit(model(x.to(device)), y.view(-1).long().to(device)).backward(); opt.step()
-        ys, ps = predict(model); auc = roc_auc_score(ys, ps)
+            opt.zero_grad()
+            crit(model(x.to(device)), y.view(-1).long().to(device)).backward()
+            opt.step()
+        ys, ps = predict(model)
+        auc = roc_auc_score(ys, ps)
         print(f"   epoch {ep:02d}  val AUC {auc:.4f}")
-        if auc > best_auc: best_auc, best = auc, (ys, ps, ep)
-        torch.save(model.state_dict(), "best_model.pt")
-    
+        if auc > best_auc:
+            best_auc, best = auc, (ys, ps, ep)
+            torch.save(model.state_dict(), save_path)  # Saves ONLY when val AUC improves
     return best
 
 # %% Cell 5: run every config
 preds = {}
 for name, w in CONFIGS.items():
     print(f"\n=== {name}: weights {np.round(w, 2)} ===")
-    preds[name] = train(w)
+    preds[name] = train(w, save_path=f"best_{name.lower().replace(' ', '_')}.pt")
 
 # %% Cell 6: evaluation table (at 0.5 AND threshold-free)
 def metrics(ys, ps, thr=0.5):
@@ -115,7 +136,6 @@ for i, (name, (ys, ps, ep)) in enumerate(preds.items(), start=1):
 plt.tight_layout(); plt.show()
 
 # %% Cell 8: threshold table per config (shows what weights really change)
-torch.save(model.state_dict(), "best_model.pt")
 for name, (ys, ps, ep) in preds.items():
     print(f"\n{name}")
     for thr in np.arange(0.1, 0.91, 0.1):
