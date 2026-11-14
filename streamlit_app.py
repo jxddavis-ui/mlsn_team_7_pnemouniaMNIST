@@ -15,9 +15,9 @@ from torchvision import models, transforms
 from PIL import Image
 
 # ---------------- FROZEN SETTINGS ----------------
-WEIGHTS_PATH = "weights/best_model.pt"   # TODO: final weights file (LR 3e-5, seed 42, 15 epochs)
+WEIGHTS_PATH = "best_model.pt"
 MODEL_NAME = "DenseNet121"
-IMG_SIZE = 64
+IMG_SIZE = 224
 LEARNING_RATE = 3e-5
 SEED = 42
 EPOCHS = 15
@@ -49,7 +49,10 @@ DISCLAIMER = (
 
 def build_model():
     model = models.densenet121(weights=None)
-    model.classifier = nn.Linear(model.classifier.in_features, 2)
+    model.classifier = nn.Sequential(
+        nn.Dropout(0.3),
+        nn.Linear(model.classifier.in_features, 2)
+    )
     return model
 
 
@@ -75,8 +78,7 @@ def load_model():
             for k in ("model_state_dict", "state_dict"):
                 if k in state:
                     state = state[k]
-        state = {k.replace("module.", ""): v for k, v in state.items()}
-        model.load_state_dict(state)
+state = {k.replace("module.", ""): (v.float() if v.is_floating_point() else v) for k, v in state.items()}        model.load_state_dict(state)
         model.eval()
         return model, None
     except Exception as e:
