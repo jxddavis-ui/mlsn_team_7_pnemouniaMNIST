@@ -17,7 +17,7 @@ from PIL import Image
 # ---------------- FROZEN SETTINGS ----------------
 WEIGHTS_PATH = "weights/best_model.pt"   # TODO: final weights file (LR 3e-5, seed 42, 15 epochs)
 MODEL_NAME = "DenseNet121"
-IMG_SIZE = 64
+IMG_SIZE = 224
 LEARNING_RATE = 3e-5
 SEED = 42
 EPOCHS = 15
@@ -48,9 +48,11 @@ DISCLAIMER = (
 
 
 def build_model():
-    """Must match the training architecture exactly."""
     model = models.densenet121(weights=None)
-    model.classifier = nn.Linear(model.classifier.in_features, 2)  # 1 logit
+    model.classifier = nn.Sequential(
+        nn.Dropout(0.3),
+        nn.Linear(model.classifier.in_features, 2)
+    )
     return model
 
 
